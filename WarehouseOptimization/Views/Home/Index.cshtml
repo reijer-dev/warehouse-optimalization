@@ -1,0 +1,111 @@
+﻿@model WarehouseMap
+
+		@{
+	var random = new Random();
+	var improvements = ViewBag.Improvements as Dictionary<long, double>;
+		}
+		<h1>@ViewBag.Time ms @ViewBag.Weight cm lopen</h1>
+		<canvas id="myChart"></canvas><br />
+<canvas id="warehousemap"></canvas><br />
+
+
+<script>
+(async function() {
+
+
+const labels = [
+  @Html.Raw(string.Join(",",improvements.Select(x => $"'{x.Key}'")))
+];
+const data = {
+  labels: labels,
+  datasets: [{
+    label: 'My First dataset',
+    backgroundColor: 'rgb(255, 99, 132)',
+    borderColor: 'rgb(255, 99, 132)',
+    data: [@Html.Raw(string.Join(",",improvements.Select(x => x.Value.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture))))],
+  }]
+};
+	const config = {
+  type: 'line',
+  data: data,
+  options: {}
+};
+
+var myChart = new Chart(
+    document.getElementById('myChart'),
+    config
+  );
+  var canvas = document.getElementById('warehousemap');
+  var scale = 0.7;
+  canvas.width = 1000;
+  canvas.height = 900;
+  var ctx = canvas.getContext('2d');
+  ctx.lineWidth = 3;
+
+	//Draw Scaffolds
+			ctx.fillStyle = "#ddd";
+	@foreach(var scaffold in Model.Scaffolds)
+	{
+  @:ctx.beginPath();
+		var firstCorner = scaffold.Corners.First();
+		@:ctx.moveTo(@(firstCorner.Point.X)*scale, @(firstCorner.Point.Y)*scale);
+		foreach(var corner in scaffold.Corners.Skip(1))
+		{
+			@:ctx.lineTo(@(corner.Point.X)*scale, @(corner.Point.Y)*scale);
+		}
+		@:ctx.lineTo(@(firstCorner.Point.X)*scale, @(firstCorner.Point.Y)*scale);
+		@:ctx.closePath();
+		@:ctx.fill();
+	}
+	ctx.font = "12px Arial";
+  //Draw points
+  @foreach (var point in Model.Graph.Points.Values)
+	{
+  @:ctx.beginPath();
+		if (point.NeedsVisit)
+		{
+			@:ctx.strokeStyle = "blue";
+			@:ctx.arc(@(point.X)*scale, @(point.Y)*scale, 20*scale, 0, 2 * Math.PI);
+		}
+		else{
+			@:ctx.strokeStyle = "black";
+			@:ctx.arc(@(point.X)*scale, @(point.Y)*scale, 10*scale, 0, 2 * Math.PI);
+    }
+		@:ctx.stroke();
+		@:ctx.fillText("@(point.Number)", @(point.X)*scale, @(point.Y)*scale);
+		}
+  ctx.lineWidth = 2;
+		
+  @foreach (var edge in Model.Graph.AdjacencyList)
+	{
+	foreach(var target in edge.Value){
+		var r = random.Next(10,256);
+		var g = 0;
+			var b = 0;
+			@:ctx.strokeStyle = "#eee";
+  @:ctx.beginPath();
+		@:ctx.moveTo(@(Model.Graph.Points[edge.Key].X)*scale, @(Model.Graph.Points[edge.Key].Y)*scale);
+			@:ctx.lineTo(@(Model.Graph.Points[target].X)*scale, @(Model.Graph.Points[target].Y)*scale);
+  @:ctx.stroke();
+	 }
+	}
+	
+			ctx.strokeStyle = "black";
+	ctx.beginPath();
+		@{
+			var firstPoint = Model.Graph.FoundPath.First();
+			}
+		ctx.moveTo(@(firstPoint.X)*scale, @(firstPoint.Y)*scale);
+		@foreach(var point in Model.Graph.FoundPath.Skip(1))
+		{
+			@:ctx.lineTo(@(point.X)*scale, @(point.Y)*scale);
+		@:ctx.stroke();
+		@:await sleep(60);
+		}
+		
+})();
+		function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+</script>
