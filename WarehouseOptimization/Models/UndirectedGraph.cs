@@ -76,6 +76,36 @@ namespace WarehouseOptimization.Models
 								}
 						}
 				}
+				//for x = 0;     x < i - 1; x++
+				//for x = k - 1; x >= k-i; x--   0 45 46 47 48 49
+				//for x = k;     x <             0 45 47 46 48 49
+				//                               0-45 45-47 47-46 46-48
+				public double GetSwappedPathWeight(List<int> path, int i, int k)
+				{
+						var temp = new List<int>();
+						double weight = 0;
+						var prev = path[0];
+						for (var x = 0; x < i - 1; x++)
+						{
+								temp.Add(prev);
+								weight += NetWeights[(prev, path[x + 1])].Item1;
+								prev = path[x + 1];
+						}
+						for(var x = k; x >= i; x--)
+						{
+								temp.Add(prev);
+								weight += NetWeights[(prev, path[x])].Item1;
+								prev = path[x];
+						}
+						for (var x = k + 1; x < path.Count; x++)
+						{
+								temp.Add(prev);
+								weight += NetWeights[(prev, path[x])].Item1;
+								prev = path[x];
+						}
+						temp.Add(prev);
+						return weight;
+				}
 
 				public double GetPathWeight(List<int> path)
 				{
@@ -112,8 +142,8 @@ namespace WarehouseOptimization.Models
 				{
 						var answer = new List<int>();
 						var pointsToVisit = Points.Where(x => x.Value.NeedsVisit).Select(x => x.Key).ToList();
-						var existingRoute = new List<int>(){ start };
-								existingRoute.AddRange(pointsToVisit);
+						var existingRoute = new List<int>() { start };
+						existingRoute.AddRange(pointsToVisit);
 						existingRoute.Add(end);
 
 						//The second way
@@ -128,7 +158,7 @@ namespace WarehouseOptimization.Models
 						var stopWatch = new Stopwatch();
 						stopWatch.Start();
 						var betterSolutionFound = true;
-						while (betterSolutionFound && stopWatch.ElapsedMilliseconds <= timeLimit *1000)
+						while (betterSolutionFound && stopWatch.ElapsedMilliseconds <= timeLimit * 1000)
 						{
 								betterSolutionFound = false;
 								for (var i = 2; i <= existingRoute.Count - 1; i++)
@@ -137,8 +167,7 @@ namespace WarehouseOptimization.Models
 												break;
 										for (var k = i + 1; k <= existingRoute.Count - 1; k++)
 										{
-												var newRoute = TwoOptSwap(existingRoute, i, k);
-												var newDistance = GetPathWeight(newRoute);
+												var newDistance = GetSwappedPathWeight(existingRoute, i, k);
 												if (newDistance < bestDistance)
 												{
 														betterSolutionFound = true;
@@ -146,7 +175,7 @@ namespace WarehouseOptimization.Models
 																improvements.Remove(stopWatch.ElapsedMilliseconds);
 														improvements.Add(stopWatch.ElapsedMilliseconds, newDistance);
 														lastImprovementAt = stopWatch.ElapsedMilliseconds;
-														existingRoute = newRoute;
+														existingRoute = TwoOptSwap(existingRoute, i, k).ToList();
 														bestDistance = newDistance;
 														break;
 												}
@@ -155,18 +184,22 @@ namespace WarehouseOptimization.Models
 						}
 						return (GetFullPath(existingRoute), improvements);
 				}
-
-				public List<int> TwoOptSwap(List<int> route, int i, int k)
+				//2 3 4 5 6 7 8 9
+				//i = 3, k = 5
+				//4 5 6 7 8
+				//4 5 7 6 8
+				//for x = 0;     x < i - 1; x++
+				//for x = k - 1; x >= k-i; x--
+				//for x = k;     x < 
+				public IEnumerable<int> TwoOptSwap(List<int> path, int i, int k)
 				{
-						var newRoute = route.Take(i - 1).ToList();
-						newRoute.AddRange(route.Skip(i - 1).Take(k - i + 1).Reverse());
-						newRoute.AddRange(route.Skip(k));
-						for(var x = newRoute.Count-1; x>0; x--)
-						{
-								if (newRoute[x] == newRoute[x - 1])
-										newRoute.RemoveAt(x);
-						}
-						return newRoute;
+						double weight = 0;
+						for (var x = 0; x < i; x++)
+								yield return path[x];
+						for (var x = k; x >= i; x--)
+								yield return path[x];
+						for (var x = k + 1; x < path.Count; x++)
+								yield return path[x];
 				}
 
 				public (double, List<int>) GetNetWeigth(int v, int w)
