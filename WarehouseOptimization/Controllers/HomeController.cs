@@ -22,7 +22,7 @@ namespace WarehouseOptimization.Controllers
 
 				public IActionResult Index(int l = 50, int s = 3)
 				{
-						var filePath = $@"C:\Users\reije\OneDrive\Documenten\Development\warehousemap.json";
+						var filePath = "warehousemap.json";
 						var map = new WarehouseMap();
 						var sw = new Stopwatch();
 						sw.Start();
@@ -37,12 +37,13 @@ namespace WarehouseOptimization.Controllers
 						}
 						map.BuildGraph(l);
 						map.Graph.CalculateNetWeights();
-						var (optimal, improvements) = map.Graph.GetOptimalPath(0, 0, s);
+						var (optimal, improvements, complexity) = map.Graph.GetOptimalPath(0, 0, s);
 						map.Graph.FoundPath = optimal
 								.Select(x => map.Graph.Points[x]).ToList();
 						sw.Stop();
 						ViewBag.Time = sw.ElapsedMilliseconds;
 						ViewBag.Improvements = improvements;
+						ViewBag.Complexity = complexity;
 						ViewBag.Weight = map.Graph.GetPathWeight(optimal);
 						return View(map);
 				}

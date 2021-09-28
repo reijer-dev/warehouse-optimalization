@@ -78,33 +78,33 @@ namespace WarehouseOptimization.Models
 				}
 				//for x = 0;     x < i - 1; x++
 				//for x = k - 1; x >= k-i; x--   0 45 46 47 48 49
-				//for x = k;     x <             0 45 47 46 48 49
+				//for x = k;     x <             0 46 45 47 48 49
 				//                               0-45 45-47 47-46 46-48
-				public double GetSwappedPathWeight(List<int> path, int i, int k)
+				public double GetSwappedPathWeight(double currentWeight, List<int> path, int i, int k)
 				{
-						var temp = new List<int>();
-						double weight = 0;
+						/*double weight = 0;
 						var prev = path[0];
 						for (var x = 0; x < i - 1; x++)
 						{
-								temp.Add(prev);
 								weight += NetWeights[(prev, path[x + 1])].Item1;
 								prev = path[x + 1];
 						}
 						for(var x = k; x >= i; x--)
 						{
-								temp.Add(prev);
 								weight += NetWeights[(prev, path[x])].Item1;
 								prev = path[x];
 						}
 						for (var x = k + 1; x < path.Count; x++)
 						{
-								temp.Add(prev);
 								weight += NetWeights[(prev, path[x])].Item1;
 								prev = path[x];
-						}
-						temp.Add(prev);
-						return weight;
+						}*/
+						var weight2 = currentWeight;
+						weight2 -= NetWeights[(path[i-1], path[i])].Item1;
+						weight2 -= NetWeights[(path[k], path[k + 1])].Item1;
+						weight2 += NetWeights[(path[i - 1], path[k])].Item1;
+						weight2 += NetWeights[(path[i], path[k + 1])].Item1;
+						return weight2;
 				}
 
 				public double GetPathWeight(List<int> path)
@@ -138,7 +138,7 @@ namespace WarehouseOptimization.Models
 						return fullPath;
 				}
 
-				public (List<int>, Dictionary<long, double>) GetOptimalPath(int start, int end, int timeLimit)
+				public (List<int>, Dictionary<long, double>, long complexity) GetOptimalPath(int start, int end, int timeLimit)
 				{
 						var answer = new List<int>();
 						var pointsToVisit = Points.Where(x => x.Value.NeedsVisit).Select(x => x.Key).ToList();
@@ -149,7 +149,7 @@ namespace WarehouseOptimization.Models
 						//The second way
 						//existingRoute = GetFullPath(existingRoute);
 						var bestDistance = GetPathWeight(existingRoute);
-						var counter = 0;
+						long counter = 0;
 						var improvements = new Dictionary<long, double>()
 						{
 								{ 0, bestDistance }
@@ -161,13 +161,14 @@ namespace WarehouseOptimization.Models
 						while (betterSolutionFound && stopWatch.ElapsedMilliseconds <= timeLimit * 1000)
 						{
 								betterSolutionFound = false;
-								for (var i = 2; i <= existingRoute.Count - 1; i++)
+								for (var i = 1; i < existingRoute.Count - 2; i++)
 								{
 										if (betterSolutionFound)
 												break;
-										for (var k = i + 1; k <= existingRoute.Count - 1; k++)
+										for (var k = i + 1; k < existingRoute.Count - 1; k++)
 										{
-												var newDistance = GetSwappedPathWeight(existingRoute, i, k);
+												counter++;
+												var newDistance = GetSwappedPathWeight(bestDistance, existingRoute, i, k);
 												if (newDistance < bestDistance)
 												{
 														betterSolutionFound = true;
@@ -182,18 +183,11 @@ namespace WarehouseOptimization.Models
 										}
 								}
 						}
-						return (GetFullPath(existingRoute), improvements);
+						return (GetFullPath(existingRoute), improvements, counter);
 				}
-				//2 3 4 5 6 7 8 9
-				//i = 3, k = 5
-				//4 5 6 7 8
-				//4 5 7 6 8
-				//for x = 0;     x < i - 1; x++
-				//for x = k - 1; x >= k-i; x--
-				//for x = k;     x < 
+
 				public IEnumerable<int> TwoOptSwap(List<int> path, int i, int k)
 				{
-						double weight = 0;
 						for (var x = 0; x < i; x++)
 								yield return path[x];
 						for (var x = k; x >= i; x--)

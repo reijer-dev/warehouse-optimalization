@@ -3,8 +3,10 @@
 		@{
 	var random = new Random();
 	var improvements = ViewBag.Improvements as Dictionary<long, double>;
+	var weight = (int)(ViewBag.Weight as double?).Value;
+	var complexity = (ViewBag.Complexity as long?).Value;
 		}
-		<h1>@ViewBag.Time ms @ViewBag.Weight cm lopen</h1>
+		<h3>@ViewBag.Time ms rekentijd @complexity.ToString("E2") complexiteit @weight.ToString() cm lopen</h3>
 		<canvas id="myChart"></canvas><br />
 <canvas id="warehousemap"></canvas><br />
 

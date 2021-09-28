@@ -50,7 +50,7 @@ namespace WarehouseOptimization.Models
 						{
 								Graph.AddPoint(corner);
 						}
-						var filePath = $@"C:\Users\reije\OneDrive\Documenten\Development\picklocations-{l}.json";
+						var filePath = $"picklocations-{l}.json";
 						var pickLocations = PickSomeLocations(l).ToList();
 						if (System.IO.File.Exists(filePath))
 						{
