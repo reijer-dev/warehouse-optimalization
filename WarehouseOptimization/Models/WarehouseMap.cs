@@ -50,7 +50,7 @@ namespace WarehouseOptimization.Models
 						{
 								Graph.AddPoint(corner);
 						}
-						var filePath = $"picklocations-{l}.json";
+						var filePath = $@"picklocations-{l}.json";
 						var pickLocations = PickSomeLocations(l).ToList();
 						if (System.IO.File.Exists(filePath))
 						{
@@ -115,8 +115,9 @@ namespace WarehouseOptimization.Models
 						}
 				}
 
-				private static bool LineIntersectsLine(Point l1p1, Point l1p2, Point l2p1, Point l2p2)
+				private bool LineIntersectsLine(Point l1p1, Point l1p2, Point l2p1, Point l2p2)
 				{
+					Graph.Complexity++;
 						float q = (l1p1.Y - l2p1.Y) * (l2p2.X - l2p1.X) - (l1p1.X - l2p1.X) * (l2p2.Y - l2p1.Y);
 						float d = (l1p2.X - l1p1.X) * (l2p2.Y - l2p1.Y) - (l1p2.Y - l1p1.Y) * (l2p2.X - l2p1.X);
 

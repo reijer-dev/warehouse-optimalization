@@ -22,10 +22,10 @@ namespace WarehouseOptimization.Models
 						};
 						map.Scaffolds = new();
 						;
-						for(var i=0; i<10; i++)
+						for(var i=0; i<20; i++)
 						{
-								var minX = i * 150 + WarehouseMap.Random.Next(0, 30);
-								var maxX = minX + 80;
+								var minX = i * 70 + WarehouseMap.Random.Next(0, 30);
+								var maxX = minX + 30;
 
 								var minY = 50 + WarehouseMap.Random.Next(0, 60);
 								var maxY = 600 + WarehouseMap.Random.Next(0, 60);
